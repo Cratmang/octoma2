@@ -46,7 +46,7 @@
 # Buzzer      : #000000
 # Silence     : #000000
 
-:const DRAW_START_X 4
+:const DRAW_START_X 35
 :const DRAW_START_Y 4
 :calc DRAW_CENTER_X { DRAW_START_X + 24 }
 :calc DRAW_CENTER_Y { DRAW_START_Y + 24 }
@@ -54,6 +54,13 @@
 :calc DRAW_END_Y { DRAW_START_Y + ( 8 * 7 ) }
 :calc DRAW_LAST_X { DRAW_END_X - 8 }
 :calc DRAW_LAST_Y { DRAW_END_Y - 8 }
+:calc FRAME_START_X { DRAW_START_X - 4 }
+:calc FRAME_END_X { DRAW_END_X + 4 }
+:calc FRAME_START_Y { DRAW_START_Y - 4 }
+:calc FRAME_END_Y { DRAW_END_Y + 4 }
+:calc FRAME_CENTER_X { DRAW_CENTER_X + 4 }
+
+
 
 :calc UI_START_X { DRAW_END_X + 6 }
 :const UI_HP_Y 1
@@ -92,37 +99,10 @@
 : hasSword 0
 : hasArmor 0
 
-: font
-	0x40 0xA0 0xE0 0xA0 0xA0  0x80 0x80 0xC0 0xA0 0xC0  0x60 0x80 0x80 0x80 0x60  0xC0 0xA0 0xA0 0xA0 0xC0 # A B C D
-	0xE0 0x80 0xE0 0x80 0xE0  0x60 0x40 0xE0 0x40 0x40  0xE0 0x80 0x80 0xA0 0xE0  0x80 0x80 0xC0 0xA0 0xA0 # E F G H
-	0x40 0x00 0x40 0x40 0x40  0xE0 0x40 0x40 0x40 0xC0  0xA0 0xA0 0xC0 0xA0 0xA0  0x80 0x80 0x80 0x80 0xE0 # I J K L
-	0x00 0x00 0xC0 0xA0 0xA0  0x00 0xE0 0xa0 0xE0 0x00  0xC0 0xA0 0xC0 0x80 0x80  0xE0 0xA0 0xA0 0xC0 0x20 # N O P Q
-	0x00 0x00 0xC0 0x80 0x80  0xC0 0x80 0xC0 0x40 0xC0  0xE0 0x40 0x40 0x40 0x40  0x00 0x00 0xA0 0xA0 0xE0 # R S T U
-	0xA0 0xA0 0xA0 0xA0 0x40  0x00 0xA0 0x40 0xA0 0x00  0xA0 0xA0 0x40 0x40 0x40  0xE0 0x20 0x40 0x80 0xE0 # V X Y Z
-	0x40 0x40 0x40 0x00 0x40  0x00 0x00 0x00 0x00 0x40  0xC0 0x20 0x60 0x00 0x40  0x40 0xC0 0x40 0x40 0xE0 # ! . ? 1
-	0xC0 0x20 0x60 0x80 0xE0  0xC0 0x20 0xC0 0x20 0xC0  0x20 0xA0 0xE0 0x20 0x20  0xE0 0x80 0xC0 0x20 0xC0 # 2 3 4 5
-	0x60 0x80 0xE0 0xA0 0xE0  0xE0 0x20 0x40 0xE0 0x40  0xE0 0xA0 0x40 0xA0 0xE0  0xE0 0xA0 0xE0 0x20 0x20 # 6 7 8 9
-	0xE0 0xA0 0xA0 0xA0 0xE0  0x00 0x40 0x00 0x40 0x00  0x40 0x80 0x80 0x80 0x40  0x40 0x20 0x20 0x20 0x40 # 0 : ( )
-	0x20 0x40 0x40 0x80 0x80 # \ (It's actually reversed, becauses I already use / for new line, and I can't be bothered to go change it
-	
-# M and W are near-illegeble when they're only 3 pixels wide, so I'm seperating them from the rest of the font.
-: fontMW 
-	0xF0 0xA8 0xA8 0xA8 0xA8  0x88 0xA8 0xA8 0xA8 0x50 
-	
-:stringmode text "ABCDEFGHIJKLNOPQRSTUVXYZ!.?1234567890:()\\" {
-	:calc addr { font + VALUE * 5 }
-	i := addr
-	sprite v0 v1 5
-	v0 += 4
-}
-:stringmode text "MW" {
-	:calc addr { fontMW + VALUE * 5 }
-	i := addr
-	sprite v0 v1 5
-	v0 += 6
-}
-:stringmode text " " { v0 += 3 }
-:stringmode text "/" { v1 += 7 v0 := UI_START_X }
+#The first thing I did when I imported my old code from Octoma was remove the Text interpreter.
+# It took up way too much space and I ultimately didn't need it.
+# Hopefully this means I can jam more funky stuff into the game!
+
 
 :const maxEnemies 8
 :calc enemyControlLimit { maxEnemies * 4 }
@@ -156,57 +136,125 @@
 	vf := 5
 	delay-loop
 	
-	#loop #Game reset loop
-	#Draw Frame 
-	i := long frame-corner-nw
-	v0 := 0 v1 := 2
-	plane 1 sprite v0 v1 2
-	plane 2 sprite v0 v1 2
-	i := long frame-corner-ne
-	v0 := DRAW_END_X v1 := 2
-	plane 1 sprite v0 v1 2
-	plane 2 sprite v0 v1 2
-	i := long frame-h
-	v0 := DRAW_START_X
-	v1 := 1
-	loop while v0 != DRAW_END_X
-		plane 1 sprite v0 v1 1
-		plane 2 sprite v0 v1 1
-		v0 += 8
-	if v1 < 64 then again
 	
+	#Draw Frame 
+	i := long frame-h
+	v0 := FRAME_CENTER_X 
+	v1 := DRAW_START_Y v1 -= 4
+	v2 := FRAME_CENTER_X 
+	v3 := DRAW_START_Y v3 -= 3
+	loop while v0 != FRAME_END_X
+		plane 2 sprite v0 v1 2
+		plane 1 sprite v2 v3 2
+		v0 += 1
+		v2 -= 1
+		vf := 1 
+		delay-loop
+	again
 	i := long frame-v
-	v0 := 1
-	v1 := DRAW_START_Y
-	loop while v1 != DRAW_END_Y
-		plane 1 sprite v0 v1 1
+	v0 -= 2
+	v1 += 2
+	v2 += 1
+	v3 += 2
+	v4 := DRAW_END_Y  v4 += 1
+	loop while v1 != v4
 		plane 2 sprite v0 v1 1
-		v0 := DRAW_END_X
-		v0 += 2
-		plane 1 sprite v0 v1 1
-		plane 2 sprite v0 v1 1
-		v0 := 1
+		plane 1 sprite v2 v3 1
 		v1 += 1
-		vf := 1
+		v3 += 1
+		vf := 1 
+		delay-loop
+	again
+	i := long frame-h
+	v0 += 1
+	v4 := FRAME_END_X v4 += 1
+	loop while v2 != v4
+		plane 2 sprite v0 v1 2
+		plane 1 sprite v2 v3 2
+		v0 -= 1
+		v2 += 1
+		vf := 1 
+		delay-loop
+	again
+	i := long frame-v
+	v0 += 1
+	v1 -= 1
+	v2 -= 2
+	v3 -= 1
+	loop while v3 != FRAME_START_Y
+		plane 2 sprite v0 v1 1
+		plane 1 sprite v2 v3 1
+		v1 -= 1
+		v3 -= 1
+		vf := 1 
+		delay-loop
+	again
+	i := long frame-h
+	v0 += 2
+	v1 += 1
+	v2 -= 1
+	v3 += 1
+	loop while v0 != FRAME_CENTER_X
+		plane 2 sprite v0 v1 2
+		plane 1 sprite v2 v3 2
+		v0 += 1
+		v2 -= 1
+		vf := 1 
 		delay-loop
 	again
 	
-	i := long frame-corner-sw
-	v0 := 0 v1 := DRAW_END_Y
-	plane 1 sprite v0 v1 2
-	plane 2 sprite v0 v1 2
-	i := long frame-corner-se
-	v0 := DRAW_END_X v1 := DRAW_END_Y
-	plane 1 sprite v0 v1 2
-	plane 2 sprite v0 v1 2
-	i := long frame-h
-	v0 := DRAW_START_X
-	v1 := 62
-	loop while v0 != DRAW_END_X
-		plane 1 sprite v0 v1 1
-		plane 2 sprite v0 v1 1
-		v0 += 8
-	if v1 < 64 then again
+	
+	#Old frame code
+	#i := long frame-corner-nw
+	#v0 := 0 v1 := 2
+	#plane 1 sprite v0 v1 2
+	#plane 2 sprite v0 v1 2
+	#i := long frame-corner-ne
+	#v0 := DRAW_END_X v1 := 2
+	#plane 1 sprite v0 v1 2
+	#plane 2 sprite v0 v1 2
+	#i := long frame-h
+	#v0 := DRAW_START_X
+	#v1 := 1
+	#loop while v0 != DRAW_END_X
+	#	plane 1 sprite v0 v1 1
+	#	plane 2 sprite v0 v1 1
+	#	v0 += 8
+	#if v1 < 64 then again
+	
+	#i := long frame-v
+	#v0 := DRAW_START_X
+	#v0 -= 0
+	#v1 := DRAW_START_Y
+	#loop while v1 != DRAW_END_Y
+	#	plane 1 sprite v0 v1 1
+	#	plane 2 sprite v0 v1 1
+	#	v0 := DRAW_END_X
+	#	v0 += 2
+	#	plane 1 sprite v0 v1 1
+	#	plane 2 sprite v0 v1 1
+	#	v0 := DRAW_START_X
+	#	v1 += 1
+	#	vf := 1
+	#	delay-loop
+	#again
+	
+	#i := long frame-corner-sw
+	#v0 := 0 v1 := DRAW_END_Y
+	#plane 1 sprite v0 v1 2
+	#plane 2 sprite v0 v1 2
+	#i := long frame-corner-se
+	#v0 := DRAW_END_X v1 := DRAW_END_Y
+	#plane 1 sprite v0 v1 2
+	#plane 2 sprite v0 v1 2
+	#i := long frame-h
+	#v0 := DRAW_START_X
+	#v1 := 62
+	#loop while v0 != DRAW_END_X
+	#	plane 1 sprite v0 v1 1
+	#	plane 2 sprite v0 v1 1
+	#	v0 += 8
+	#if v1 < 64 then again
 	
 	#UI TEXT
 	v0 := UI_START_X v2 := v0
@@ -216,7 +264,7 @@
 	v1 := UI_STR_Y
 	v0 := UI_START_X
 	plane 2
-	text "STR: 1"
+	#text "STR: 1"
 	
 	#Draw Player sprite in center of the screen
 	:macro drawPlayer {
@@ -259,10 +307,10 @@
 			v0 := DRAW_END_X
 			v0 += 5
 			v1 := 15
-			text "DIRECTION?/"
+			#text "DIRECTION?/"
 			v0 := DRAW_END_X
 			v0 += 5
-			text "(3) TO CANCEL"
+			#text "(3) TO CANCEL"
 		}
 		
 		#Basic attack
@@ -601,9 +649,9 @@
 						#Got the sword!
 						v0 := UI_START_X v0 += 19
 						v1 := UI_STR_Y
-						plane 2 text "1"
+						plane 2 #text "1"
 						v0 -= 4
-						text "7"
+						#text "7"
 						i := hasSword
 						vf := 1
 						save vf - vf
@@ -1045,10 +1093,10 @@
 		v0 := DRAW_END_X
 		v0 += 5
 		v1 := 30
-		text "PLEASE RESET/"
+		#text "PLEASE RESET/"
 		v0 := DRAW_END_X
 		v0 += 5
-		text "TO PLAY AGAIN"
+		#text "TO PLAY AGAIN"
 	}
 	
 	plane 1
@@ -1059,7 +1107,7 @@
 	v0 := DRAW_END_X
 	v0 += 5
 	v1 := 30
-	text "PLEASE RESET/"
+	#text "PLEASE RESET/"
 	loop
 	vf := 7
 	delay-loop
@@ -1077,7 +1125,7 @@
 : draw-player-health-ui
 	v0 := DRAW_END_X v0 += 6
 	v1 := 1
-	text "HP:"
+	#text "HP:"
 	# Draw Current Health
 	i := health
 	load v2 - v2 number-to-string
@@ -1085,7 +1133,7 @@
 	load v2 - v2 number-to-string
 	i := health i += v1 i += v1
 	load v2 - v2 number-to-string
-	text "\\"
+	#text "\\"
 	i := healthMax
 	load v2 - v2 number-to-string
 	i := healthMax i += v1 
@@ -1095,17 +1143,16 @@
 ;
 
 : number-to-string #Uses vf, plus v0 and v1 for drawing the numbers
-	if v2 == 0 begin text "0" end # I wanted to use if then, but for some reason, it causes the text command to
-	if v2 == 1 begin text "1" end #  write the nuumber multiple times. if begin end doesn't cause this, and I have
-	if v2 == 2 begin text "2" end #  absolutely no idea why.
-	if v2 == 3 begin text "3" end
-	if v2 == 4 begin text "4" end
-	if v2 == 5 begin text "5" end 
-	if v2 == 6 begin text "6" end
-	if v2 == 7 begin text "7" end
-	if v2 == 8 begin text "8" end
-	if v2 == 9 begin text "9" end
-	#It occours to me that vf changes based on factors I do not fully understand. We'll see if drawing with text causes weird stuff to happen
+	#if v2 == 0 begin text "0" end # I wanted to use if then, but for some reason, it causes the text command to
+	#if v2 == 1 begin text "1" end #  write the nuumber multiple times. if begin end doesn't cause this, and I have
+	#if v2 == 2 begin text "2" end #  absolutely no idea why.
+	#if v2 == 3 begin text "3" end
+	#if v2 == 4 begin text "4" end
+	#if v2 == 5 begin text "5" end 
+	#if v2 == 6 begin text "6" end
+	#if v2 == 7 begin text "7" end
+	#if v2 == 8 begin text "8" end
+	#if v2 == 9 begin text "9" end
 ;
 
 
@@ -1434,37 +1481,48 @@
 0xEE 0x00 0xBB 0x00 0x77 0x00 0xDD 0x00
 
 : playerSprite
-0x02 0x32 0x7A 0x6A 0xB7 0x82 0x22 0xC2
-0x02 0x32 0x52 0x6A 0xB0 0xE8 0x2E 0xC0
+0x00 0x0A 0x80 0xBF 0x1E 0x6C 0x03 0x30 
+0x1E 0xA1 0x3F 0x7B 0x3E 0x8E 0x08 0x41
 
 : playerSprite_dead
-0x08 0xFF 0x08 0x20 0xA6 0x8F 0x43 0x0C
-0x00 0xF0 0x00 0x20 0xA6 0xBF 0x7F 0x0E 
+0x0E 0x60 0x54 0x32 0x15 0x14 0x00 0x00
+0x00 0x71 0xF8 0xE8 0x60 0x01 0x24 0x00 
 
 : enemiesSprites
 #1 = Shrimp
-0x00 0x3C 0x39 0x76 0x68 0x46 0x20 0x00
-0x00 0x14 0x00 0x00 0x00 0x00 0x00 0x00
+# Small, basic enemy. Dies in one hit.
+0x00 0x7A 0x72 0xEC 0xD1 0x8E 0x60 0x40
+0x00 0x28 0x00 0x00 0x00 0x00 0x60 0x40
 
 #2 = Lobster
+# Not a lot of health, but packs a punch.
 0x00 0x0E 0x1F 0x3F 0x0C 0x5F 0x5C 0x3F
 0x00 0x00 0x00 0x00 0x00 0x57 0x54 0x07
 
 #3 = Waterbear
+# Big tank, hits like a bus
 0x00 0x3E 0x7F 0xFF 0xFF 0xFF 0x5E 0x55
 0x00 0x36 0x5B 0xEB 0xAB 0xEB 0x14 0x15
 
 #4 = Skull
+# Can move through walls
 0x38 0x7C 0xBA 0xBA 0x7C 0x44 0x54 0x38
 0x38 0x7C 0xBA 0x92 0x7C 0x00 0x54 0x38
 
-#5 = Squid
-0x0C 0x1E 0x3F 0x80 0x9E 0x6C 0x92 0x7E
-0x0C 0x1E 0x03 0x8A 0x8E 0x04 0x80 0x58
+#5 = Lure
+# Light up areas? Disguises self as key? Experimentation needed.
+0x38 0x04 0x0E 0x3F 0x7F 0x7F 0xAB 0xAB
+0xF0 0xC0 0x00 0x2C 0x6E 0x42 0x00 0x00
 
-#6 = Wizard
-0x18 0x3C 0x7E 0xFF 0x18 0x3C 0xBD 0x66
-0x18 0x3C 0x7E 0xFF 0x24 0xBD 0x99 0x00
+#6 = Serpent
+# Can attack at a distance.
+0x30 0x7E 0xFF 0x31 0xF7 0x44 0x29 0x06
+0x00 0x54 0x04 0x21 0x42 0x44 0x21 0x04 
+
+#7 = Stingray
+# Hides in plain sight, leaps and attacks when player gets too close.
+0x1C 0x7F 0x7F 0x3E 0xBE 0x9C 0x48 0x30
+0x1C 0x6B 0x49 0x3E 0x3E 0x14 0x00 0x00
 
 : hurtBox
 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF
@@ -1500,10 +1558,10 @@
 0x40 0xC0
 
 : frame-h
-0xFF 
+0x80 0x80 
 
 : frame-v
-0x80
+0xC0
 
 # Victory Screen! It's divided into 4 parts, depending on whether the player has the sacred armor and/or the sacred sword!
 : vic-sword
