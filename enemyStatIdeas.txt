@@ -1,0 +1,32 @@
+SHRIMP
+AT: 1
+HP: 1
+
+LOBSTER
+AT: 4
+HP: 1
+
+WATERBEAR
+AT: 2
+HP: 5
+
+SKULL
+AT: 7
+HP: 1
+Can pass through walls
+
+SERPENT
+AT: 3
+HP: 3
+Ranged attack
+
+RAY
+AT: 3
+HP: 2
+Hides until the player gets close
+
+ANGLER
+AT: 3
+HP: 6
+Lights the area around it
+Wanders aimlessly (unless damaged?)
