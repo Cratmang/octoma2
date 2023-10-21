@@ -9,13 +9,14 @@
 # It is HIGHLY recommded that you play the game on LUDICROUS SPEED, otherwise the game will be far too slow.
 #  (500-1000 cycles/frame might work, but may also trigger epilepsy)
 
-# DEFAULT COLOURS (CGA 1):
-# Background  : #000000 (Black)
-# Foreground 1: #FF00FF (Fuchsia)
-# Foreground 2: #00FFFF (Cyan)
-# Blended     : #FFFFFF (White)
-# Buzzer      : #000000
-# Silence     : #000000
+# DEFAULT COLOURS:
+# Background  : #2f4858 (Deep Tourquoise)
+# Foreground 1: #c24d4d (Red)
+# Foreground 2: #806cb6 (Light Purple)
+# Blended     : #f37c3b (Orange)
+# I set the Buzzer and Silent colours to be the same as the Background, because I don't understand why you would
+# want the screen to flash different colours whenever the computer makes any kind of sound. Maybe this is the wrong
+# kind of game for that?
 
 :const DRAW_START_X 35
 :const DRAW_START_Y 4
@@ -31,8 +32,7 @@
 :calc FRAME_END_Y { DRAW_END_Y + 4 }
 :calc FRAME_CENTER_X { DRAW_CENTER_X + 4 }
 
-
-
+#These values probably should be adjusted, since the play area is in the center of the screen now.
 :calc UI_START_X { DRAW_END_X + 6 }
 :const UI_HP_Y 1
 :calc UI_STR_Y { UI_HP_Y + 7 }
@@ -177,13 +177,13 @@
 	
 	
 	#UI TEXT
-	v0 := UI_START_X v2 := v0
-	v1 := 1
-	plane 1
-	draw-player-health-ui
-	v1 := UI_STR_Y
-	v0 := UI_START_X
-	plane 2
+	#v0 := UI_START_X v2 := v0
+	#v1 := 1
+	#plane 1
+	#draw-player-health-ui
+	#v1 := UI_STR_Y
+	#v0 := UI_START_X
+	#plane 2
 	#text "STR: 1"
 	
 	#Draw Player sprite in center of the screen
@@ -239,10 +239,6 @@
 			askDirection
 		end
 		
-		#Magic Blast
-		v0 := OCTO_KEY_2 if v0 key begin
-		
-		end
 		
 		loop
 			#Movement/Choosing Direction
@@ -326,15 +322,31 @@
 						end 
 						if v9 == 23 begin #From Shrimp Cavern to Donut Ruins
 							v8 := 12
-							v9 := 53
+							v9 := 55
 							loop while v7 != enemySpawnLimit
 								i := long enemy-spawn-cave
 								spawnEnemy
 							again
 						end 
-						if v9 == 48 begin #From Donut Ruins to Checker Hall
+						if v9 == 68 begin #From Checker Hall to Echo Chamber
+							v8 := 7
+							v9 := 100
+							loop while v7 != enemySpawnLimit
+								i := long enemy-spawn-temple
+								spawnEnemy
+							again
+						end 
+						if v9 == 50 begin #From Donut Ruins to Checker Hall
 							v8 := 15
-							v9 := 64
+							v9 := 68
+							loop while v7 != enemySpawnLimit
+								i := long enemy-spawn-temple
+								spawnEnemy
+							again
+						end 
+						if v9 == 101 begin #From Echo Chamber to Server Room
+							v8 := 12
+							v9 := 137
 							loop while v7 != enemySpawnLimit
 								i := long enemy-spawn-temple
 								spawnEnemy
@@ -563,24 +575,15 @@
 			v3 := v8 v4 := v9
 			v7 := 1
 			
-			# This loop is supposed to check the ID of the tile the player was standing on, which was previously stored in ve.
-			# This is because in the original Octoma, your victory was determined by whether or not you've successfully reached the princess.
-			# But I changed the code for the Map Draw to use the ve register, and apparently that created a bug. Oops.
-			# For now, let's add some code to set ve back to the tile ID.
-			
-			i := playerPos
-			load va - vb
-			getTileID 
-			#Delay to prevent the player from just ZOOMING across the map
-			# Copied from the default Octo example project. I only barely understand how it works.
-			if ve == 8 begin vf := 60
-			else vf := 14 end
+			# Need to rewrite the end condition
+			vf := 14
 			delay-loop
 			v7 := 0
 			if ve != 8 then ve := 0
 		end
 		
-	 if ve != 8 then again
+	 #if ve != 8 then 
+	 again
 	 
 	 #VICTORY! WE FOUND THE PRINCESS! Draw the Quest Complete screen.
 	 drawMap
@@ -663,9 +666,15 @@
 # Gets the ID of a tile on the map, determined by va (X) and vb (Y), and then loads it to ve.
 	
 	vd := vb
-	if vb > 59 begin #The map is cut into sections 
+	if vb > 113 begin #The map is cut into sections 
+		i := long map-computer-room
+		vd -= 114
+	else if vb > 87 begin 
+		i := long map-echo-chamber
+		vd -= 88
+	else if vb > 61 begin 
 		i := long map-checker-hall
-		vd -= 60
+		vd -= 62
 	else if vb > 37 begin
 		i := long map-donut-ruins
 		vd -= 38
@@ -674,7 +683,7 @@
 		vd -= 19
 	else
 		i := long map-world
-	end end end
+	end end end end end 
 	
 	vd += vd # 2
 	vd += vd # 4
@@ -1091,8 +1100,10 @@
 0  0  0  0  0  0  0  0  5  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 #------|----------------------------------------------------------|------- 37
 : map-donut-ruins
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 0  0  0  0  0  0  0  0  0  0  47 47 47 47 47 0  0  0  0  0  0  0  0  0
-#------|----------------------------------------------------------|------- 38
+#------|----------------------------------------------------------|------- 40
 0  0  0  0  0  0  0  0  0  0  47 2  2  2  47 0  0  0  0  0  0  0  0  0
 0  0  0  0  0  0  0  0  41 41 47 2  9  2  47 41 41 0  0  0  0  0  0  0
 0  0  0  0  0  0  41 41 41 41 47 2  2  2  47 41 41 41 41 0  0  0  0  0
@@ -1111,19 +1122,21 @@
 0  0  0  0  0  41 41 0  0  6  6  6  6  6  6  3  0  0  41 0  0  0  0  0
 0  0  0  0  0  0  41 3  0  3  6  40 40 40 3  6  3  3  41 0  0  0  0  0
 0  0  0  0  0  0  41 41 41 41 3  0  0  0  3  41 41 41 41 0  0  0  0  0
-#------|----------------------------------------------------------|------- 56
+#------|----------------------------------------------------------|------- 58
 0  0  0  0  0  0  0  0  0  41 41 41 41 41 41 41 0  0  0  0  0  0  0  0
 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
-#------|----------------------------------------------------------|------- 59
+#------|----------------------------------------------------------|------- 61
 : map-checker-hall
-0  0  0  00 0  0  0  47 47 47 47 47 47 47 0  0  0  0  0  0  0  0  0  0
-#------|----------------------------------------------------------|------- 60
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  47 47 47 47 47 47 47 0  0  0  0  0  0  0  0  0  0
+#------|----------------------------------------------------------|------- 64
 0  0  0  0  0  0  0  47 0  2  0  2  0  47 0  0  0  0  0  0  0  0  0  0
 0  0  0  47 47 47 47 47 47 0  47 0  47 47 47 47 47 47 0  0  0  0  0  0
-0  0  0  47 0  2  0  47 0  2  0  2  0  47  0  2  0 47 0  0  0  0  0  0
-0  0  0  47 2  30 2  0  2  0  2  0  2  0   2  31 2 47 0  0  0  0  0  0
-0  0  0  47 0  2  0  47 0  2  0  2  0  47  0  2  0 47 0  0  0  0  0  0
+0  0  0  47 0  2  0  47 0  2  0  2  0  47 0  2  0  47 0  0  0  0  0  0
+0  0  0  47 2  30 2  34 2  0  2  0  2  0  2  31 2  47 0  0  0  0  0  0
+0  0  0  47 0  2  0  47 0  2  0  2  0  47 0  2  0  47 0  0  0  0  0  0
 0  0  0  47 47 47 47 47 2  0  2  0  2  47 47 47 47 47 0  0  0  0  0  0
 0  0  0  0  0  0  0  47 0  47 47 47 0  47 0  0  0  0  0  0  0  0  0  0
 0  0  0  0  0  0  0  47 2  0  2  0  2  47 47 0  0  0  0  0  0  0  0  0
@@ -1140,20 +1153,72 @@
 0  0  0  0  0  0  47 2  0  2  0  2  0  2  0  2  47 2  0  0  0  3  41 0
 0  0  0  0  0  0  47 0  2  47 2  0  2  0  2  0  2  0  3  3  3  5  41 0
 0  0  0  0  0  0  47 47 47 47 47 47 47 47 47 47 47 41 41 41 41 41 41 0
-#------|----------------------------------------------------------|------- 81
+#------|----------------------------------------------------------|------- 85
 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
-#------|----------------------------------------------------------|------- 83
+#------|----------------------------------------------------------|------- 87
 : map-echo-chamber
-
-
-#------|----------------------------------------------------------|------- 100
-
-
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  40 40 40 40 40 40 40 40 40 40 40 40 40 0  0  0  0  0  0  0  0
+#------|----------------------------------------------------------|------- 90
+0  0  0  40 10 8  8  8  8  8  8  8  8  13 0  40 0  0  0  0  0  0  0  0
+0  0  0  40 7  0  40 3  3  0  0  0  0  7  0  40 0  0  0  0  0  0  0  0
+0  0  0  40 7  3  40 40 40 40 40 40 0  7  0  40 0  0  0  0  0  0  0  0
+0  0  0  40 7  0  40 3  0  10 13 40 0  0  3  40 0  0  0  0  0  0  0  0 
+0  0  0  40 11 8  8  8  8  9  12 40 3  0  3  40 0  0  0  0  0  0  0  0
+0  0  0  40 40 40 40 40 40 34 40 40 40 40 40 40 40 40 40 40 40 40 0  0
+0  0  0  40 3  3  0  0  0  11 13 40 3  0  10 8  8  8  8  8  13 40 0  0
+0  0  0  40 3  10 8  8  8  13 7  40 3  0  7  0  3  3  0  0  7  40 0  0
+0  0  0  40 0  7  37 3  37 7  7  40 10 8  9  8  13 40 10 8  12 40 0  0
+0  0  0  40 10 9  3  31 3  9  12 40 7  37 3  37 7  40 7  0  3  40 0  0
+0  0  0  40 7  7  37 3  37 7  3  40 7  3  30 3  7  40 7  0  0  40 0  0
+0  0  0  40 7  11 8  8  8  12 0  40 7  37 3  37 7  40 7  0  0  40 0  0
+0  0  0  40 11 13 0  0  0  3  3  40 11 8  8  8  12 40 7  0  3  40 0  0
+0  0  0  40 40 35 40 40 40 40 40 40 40 40 40 40 40 40 7  0  3  40 0  0
+0  0  0  40 0  7  3  40 10 8  8  8  13 0  3  10 8  8  9  8  13 40 0  0
+0  0  0  40 0  7  3  40 7  5  0  0  7  0  0  7  0  0  7  0  7  40 0  0
+0  0  0  40 0  7  0  40 11 8  8  8  9  8  8  12 0  3  11 8  12 40 0  0
+0  0  0  40 0  7  0  40 40 40 40 3  7  0  40 40 40 40 40 40 40 40 0  0
+0  0  0  40 0  7  0  0  3  0  0  0  7  3  40 0  0  0  0  0  0  0  0  0
+0  0  0  40 3  11 8  8  8  8  8  8  12 3  40 0  0  0  0  0  0  0  0  0
+#------|----------------------------------------------------------|------- 110
+0  0  0  40 40 40 40 40 40 40 40 40 40 40 40 0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+#------|----------------------------------------------------------|------- 113
 : map-computer-room
-
-
-#------|----------------------------------------------------------|------- 120
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  41 40 42 41 40 41 40 40 41 40 41 0  0  0  0  0  0
+#------|----------------------------------------------------------|------- 116
+0  0  0  0  0  0  0  43 3  3  7  3  7  3  3  7  3  43 0  0  0  0  0  0
+0  0  0  0  0  0  0  43 3  3  7  3  44 3  3  7  3  43 0  0  0  0  0  0
+0  0  0  0  0  0  0  43 3  10 12 3  3  14 15 7  3  43 0  0  0  0  0  0
+0  0  0  0  0  0  0  43 3  7  10 12 3  10 12 7  3  43 0  0  0  0  0  0
+0  0  0  0  0  0  0  43 3  7  43 7  3  7  43 7  3  43 0  0  0  0  0  0
+0  0  0  0  0  0  0  43 3  11 8  12 3  11 8  12 3  43 0  0  0  0  0  0
+0  0  35 34 34 34 40 40 40 42 40 40 35 40 40 40 40 40 40 34 34 34 35 0
+0  0  34 1  0  1  0  0  0  0  1  0  1  0  0  0  0  0  1  1  0  1  34 0
+0  0  34 1  0  0  1  1  0  1  0  1  1  1  0  1  0  1  0  0  0  0  34 0
+0  0  34 0  0  0  0  0  0  0  0  0  1  1  0  1  0  1  0  0  1  0  34 0
+0  0  35 0  1  0  35 0  1  0  35 1  0  1  35 1  0  0  35 0  1  0  35 0 
+0  0  34 0  1  0  0  0  1  0  0  0  1  0  0  0  0  1  0  0  1  1  34 0
+0  0  34 1  0  0  0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  1  34 0
+0  0  34 0  1  1  0  0  0  0  0  0  0  0  1  1  1  0  0  0  0  0  34 0
+0  0  35 0  0  0  35 0  1  0  35 0  0  0  35 0  0  0  35 0  0  0  35 0
+0  0  34 0  0  0  0  0  0  1  0  1  0  0  0  0  0  0  0  0  0  1  34 0
+0  0  34 1  1  0  0  0  0  0  0  0  1  0  0  0  0  0  1  0  0  1  34 0
+0  0  34 0  0  0  0  0  1  0  0  0  1  0  0  0  1  0  0  0  0  0  34 0
+0  0  35 0  1  0  35 1  0  1  35 1  0  1  35 1  0  1  35 0  0  0  35 0
+0  0  34 1  0  0  0  0  1  0  0  0  1  0  0  0  1  0  0  0  0  1  34 0
+0  0  34 0  0  0  1  0  0  0  0  0  31 0  0  0  1  0  0  0  1  1  34 0
+0  0  34 0  1  0  0  0  0  1  0  1  0  0  1  0  0  1  0  1  0  0  34 0
+0  0  35 34 34 34 35 34 34 34 35 34 34 34 35 34 34 34 35 34 34 34 35 0
+#------|----------------------------------------------------------|------- 139
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+#------|----------------------------------------------------------|------- 141
 
 
 
